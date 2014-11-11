@@ -1,0 +1,8 @@
+# /etc/fstab: static file system information.
+#
+# file system   mount point     type    options                 dump pass
+/dev/sda2       /               ext4    rw,nosuid,nodev         0    1
+/dev/sda1       /boot           ext4    rw,nosuid,nodev         0    2
+/dev/sda5       none            swap    sw                      0    0
+/dev/sda6       /media/data     ext4    rw,nosuid,nodev         0    2
+proc            /proc           proc    defaults                0    0

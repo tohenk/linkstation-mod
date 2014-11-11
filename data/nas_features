@@ -1,0 +1,12 @@
+# nas_features (this line is ignored)
+#
+# usage:
+# OLD_FEATURE;NEW_FEATURE
+#
+# OLD_FEATURE and NEW_FEATURE expected to be a pattern for sed -e parameter
+# and will be written as "s/OLD_FEATURE/NEW_FEATURE", so escaping the pattern
+# is necessary.
+#
+SUPPORT_SYSLOG_FORWARD=0;SUPPORT_SYSLOG_FORWARD=1
+SUPPORT_SYSLOG_DOWNLOAD=0;SUPPORT_SYSLOG_DOWNLOAD=1
+#SUPPORT_SHUTDOWN_FROMWEB=0;SUPPORT_SHUTDOWN_FROMWEB=1

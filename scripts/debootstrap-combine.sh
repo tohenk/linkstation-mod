@@ -25,6 +25,7 @@ if [ ! -d "$3" ] || [ ! -f "$3/hddrootfs.img" ]; then
   exit 1
 fi
 
+MYDIR=`dirname $0`
 ROOT=`pwd`
 OUTDIR=$ROOT/out
 DATADIR=$ROOT/data
@@ -36,8 +37,8 @@ ROOTFS_IMG=$1
 INITRD_IMG="$2"
 HDDROOT_IMG="$3/hddrootfs.img"
 
-. $ROOT/ls-functions.sh
-. $ROOT/debootstrap-combine.cfg
+. $MYDIR/ls-functions.sh
+. $MYDIR/debootstrap-combine.cfg
 
 HOSTNAME=${HOSTNAME:=LS421DE}
 NETWORK_INTERFACE=${NETWORK_INTERFACE:=eth0}

@@ -9,10 +9,11 @@ if [ -z "$2" ]; then
   exit 1
 fi
 
+MYDIR=`dirname $0`
 ROOT=`pwd`
 IMG=$2
 SRCDIR=$1
 
-. $ROOT/ls-functions.sh
+. $MYDIR/ls-functions.sh
 
 package_rootfs $SRCDIR $IMG

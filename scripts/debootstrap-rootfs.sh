@@ -5,11 +5,12 @@
 # Modified for LS421DE by Toha <tohenk@yahoo.com>
 #
 
+MYDIR=`dirname $0`
 CDIR=`pwd`
 DEBINST=$CDIR/debian
 OUTDIR=$CDIR/rootfs
 
-. $CDIR/debootstrap-rootfs.cfg
+. $MYDIR/debootstrap-rootfs.cfg
 
 ARCH=${ARCH:=armhf}
 VERSION=${VERSION:=wheezy}
@@ -130,7 +131,7 @@ copy_libs() {
   local ROOT=$1
   local TARGET=$2
 
-  cp $CDIR/libs-cp.sh $ROOT/tmp
+  cp $MYDIR/libs-cp.sh $ROOT/tmp
   chroot $ROOT /tmp/libs-cp.sh $TARGET
   rm -f $ROOT/tmp/libs-cp.sh
 }

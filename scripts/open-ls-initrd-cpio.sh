@@ -13,6 +13,7 @@ if [ ! -f "$1" ]; then
   exit 1
 fi
 
+MYDIR=`dirname $0`
 ROOT=`pwd`
 OUTDIR=$ROOT/out
 TMP=$ROOT/tmp
@@ -22,7 +23,7 @@ INITRD_IMG_NAME=initrd.img
 INITRD_FILE_NAME=initrd.buffalo
 FIRMWARE=$1
 
-. $ROOT/ls-functions.sh
+. $MYDIR/ls-functions.sh
 
 do_prep_dirs() {
   show_msg "Preparing directories"

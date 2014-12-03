@@ -13,6 +13,7 @@ if [ ! -f "$1" ]; then
   exit 1
 fi
 
+MYDIR=`dirname $0`
 ROOT=`pwd`
 OUTDIR=$ROOT/out
 TMP=$ROOT/tmp
@@ -22,7 +23,7 @@ ROOTFS_IMG_NAME=hddrootfs.img
 ROOTFS_FILE_NAME=hddrootfs.buffalo.updated
 FIRMWARE=$1
 
-. $ROOT/ls-functions.sh
+. $MYDIR/ls-functions.sh
 
 do_prep_dirs() {
   show_msg "Preparing directories"

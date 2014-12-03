@@ -9,11 +9,12 @@ if [ -z "$2" ]; then
   exit 1
 fi
 
+MYDIR=`dirname $0`
 ROOT=`pwd`
 IMG=$1
 OUTDIR=$2
 
-. $ROOT/ls-functions.sh
+. $MYDIR/ls-functions.sh
 
 mkdir -p $OUTDIR
 extract_rootfs $OUTDIR $IMG

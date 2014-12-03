@@ -1,0 +1,5 @@
+debian/
+firmware/
+out/
+rootfs/
+tmp/

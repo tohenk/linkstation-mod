@@ -1,9 +1,9 @@
 diff --git a/arch/arm/boot/dts/armada-370-ls421de.dts b/arch/arm/boot/dts/armada-370-ls421de.dts
 new file mode 100644
-index 0000000..b73a970
+index 0000000..0795018
 --- /dev/null
 +++ b/arch/arm/boot/dts/armada-370-ls421de.dts
-@@ -0,0 +1,309 @@
+@@ -0,0 +1,286 @@
 +/*
 + * Device Tree file for Buffalo LinkStation LS421DE
 + *
@@ -36,6 +36,8 @@ index 0000000..b73a970
 +	soc {
 +		ranges = <MBUS_ID(0xf0, 0x01) 0 0xd0000000 0x100000
 +			  MBUS_ID(0x01, 0xe0) 0 0xfff00000 0x100000>;
++		pcie-mem-aperture = <0xe0000000 0x8000000>;
++		pcie-io-aperture  = <0xe8000000 0x100000>;
 +
 +		pcie-controller {
 +			status = "okay";
@@ -160,16 +162,6 @@ index 0000000..b73a970
 +					compatible = "rs5c372a";
 +					reg = <0x32>;
 +				};
-+				cs42l51: cs42l51@4a {
-+					compatible = "cs42l51";
-+					reg = <0x4a>;
-+				};
-+			};
-+
-+			audio-controller@30000 {
-+				pinctrl-0 = <&i2s_pins2>;
-+				pinctrl-names = "default";
-+				status = "okay";
 +			};
 +
 +			nand@d0000 {
@@ -297,19 +289,4 @@ index 0000000..b73a970
 +	restart-poweroff {
 +		compatible = "restart-poweroff";
 +	};*/
-+
-+	sound {
-+		compatible = "marvell,a370db-audio";
-+		marvell,audio-controller = <&audio_controller>;
-+		marvell,audio-codec = <&cs42l51 &spdif_out &spdif_in>;
-+		status = "okay";
-+	};
-+
-+	spdif_out: spdif-out {
-+		compatible = "linux,spdif-dit";
-+	};
-+
-+	spdif_in: spdif-in {
-+		compatible = "linux,spdif-dir";
-+	};
 +};

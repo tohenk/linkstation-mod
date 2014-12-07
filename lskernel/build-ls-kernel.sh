@@ -31,6 +31,9 @@ else
     --download)
       BUILD_DOWNLOAD=1
       ;;
+    --update)
+      BUILD_UPDATE=1
+      ;;
     esac
     shift
   done
@@ -48,6 +51,7 @@ fi
   echo "--dt           Build kernel DT"
   echo "--package      Package kernel and modules as tar archive"
   echo "--download     Download kernel source using GIT"
+  echo "--update       Update (pull) GIT repository"
   echo ""
 
   exit 1
@@ -88,6 +92,17 @@ KERNEL_GIT=${KERNEL_GIT:=https://git.kernel.org/pub/scm/linux/kernel/git/stable/
 
 cd "$KERNEL_DIR"
 
+# Update repository
+[ "x$BUILD_UPDATE" = "x1" ] && {
+  # save current modification
+  CLEAN=`git status | grep "working directory clean"`
+  [ -z "$CLEAN" ] && git stash save -a
+  # switch to master
+  git checkout master
+  git pull
+  exit 1
+}
+
 # Checkout version
 DO_CHECKOUT=1
 KTAG="v$LS_KERNEL_VERSION"
@@ -110,7 +125,8 @@ TAG=`git status | grep "$KTAG"`
     exit 1
   else
     echo "Switching to $KTAG."
-    git stash save -a
+    CLEAN=`git status | grep "working directory clean"`
+    [ -z "$CLEAN" ] && git stash save -a
     git checkout tags/$KTAG
     # copy .config from template
     [ -f "$MYDIR/config/$LS_KERNEL_VERSION" ] && {

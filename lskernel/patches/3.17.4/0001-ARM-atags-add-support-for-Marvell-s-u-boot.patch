@@ -15,12 +15,13 @@ diff --git a/arch/arm/include/uapi/asm/setup.h b/arch/arm/include/uapi/asm/setup
 index 979ff40..d1d0c19 100644
 --- a/arch/arm/include/uapi/asm/setup.h
 +++ b/arch/arm/include/uapi/asm/setup.h
-@@ -143,6 +143,18 @@ struct tag_memclk {
+@@ -143,6 +143,19 @@ struct tag_memclk {
  	__u32 fmemclk;
  };
  
 +/* Marvell uboot parameters */
-+#define ATAG_MV_UBOOT          0x41000403
++#define ATAG_MV_UBOOT	0x41000403
++
 +struct tag_mv_uboot {
 +	__u32 uboot_version;
 +	__u32 tclk;
@@ -34,7 +35,7 @@ index 979ff40..d1d0c19 100644
  struct tag {
  	struct tag_header hdr;
  	union {
-@@ -165,6 +177,11 @@ struct tag {
+@@ -165,6 +178,11 @@ struct tag {
  		 * DC21285 specific
  		 */
  		struct tag_memclk	memclk;

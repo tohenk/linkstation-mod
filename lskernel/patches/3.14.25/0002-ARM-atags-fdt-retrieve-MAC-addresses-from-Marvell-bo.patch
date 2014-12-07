@@ -29,16 +29,35 @@ index 9448aa0..ac7b6ae 100644
  {
  	int offset = node_offset(fdt, node_path);
  	if (offset < 0)
-@@ -179,6 +179,12 @@ int atags_to_fdt(void *atag_list, void *fdt, int total_space)
+@@ -97,6 +97,18 @@ static void merge_fdt_bootargs(void *fdt, const char *fdt_cmdline)
+ 	setprop_string(fdt, "/chosen", "bootargs", cmdline);
+ }
+ 
++static int merge_fdt_mv_uboot_mac_address(void *fdt, const char *node_path, void *mac_address)
++{
++	int len;
++	const char *addr = getprop(fdt, node_path, "mac-address", &len);
++	/* Only set mac address if DT property is not set */
++	if (NULL == addr) {
++		return setprop(fdt, node_path, "mac-address", mac_address, 6);
++	}
++
++	return -1;
++}
++
+ /*
+  * Convert and fold provided ATAGs into the provided FDT.
+  *
+@@ -179,6 +191,12 @@ int atags_to_fdt(void *atag_list, void *fdt, int total_space)
  					initrd_start);
  			setprop_cell(fdt, "/chosen", "linux,initrd-end",
  					initrd_start + initrd_size);
 +		} else if (atag->hdr.tag == ATAG_MV_UBOOT) {
 +			/* This ATAG provides up to 4 MAC addresses */
-+			setprop(fdt, "eth0", "mac-address", atag->u.mv_uboot.macAddr[0], 6);
-+			setprop(fdt, "eth1", "mac-address", atag->u.mv_uboot.macAddr[1], 6);
-+			setprop(fdt, "eth2", "mac-address", atag->u.mv_uboot.macAddr[2], 6);
-+			setprop(fdt, "eth3", "mac-address", atag->u.mv_uboot.macAddr[3], 6);
++			merge_fdt_mv_uboot_mac_address(fdt, "eth0", atag->u.mv_uboot.macAddr[0]);
++			merge_fdt_mv_uboot_mac_address(fdt, "eth1", atag->u.mv_uboot.macAddr[1]);
++			merge_fdt_mv_uboot_mac_address(fdt, "eth2", atag->u.mv_uboot.macAddr[2]);
++			merge_fdt_mv_uboot_mac_address(fdt, "eth3", atag->u.mv_uboot.macAddr[3]);
  		}
  	}
  

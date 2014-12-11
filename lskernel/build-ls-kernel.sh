@@ -128,18 +128,35 @@ TAG=`git status | grep "$KTAG"`
     CLEAN=`git status | grep "working directory clean"`
     [ -z "$CLEAN" ] && git stash save -a
     git checkout tags/$KTAG
+    # Allow config and patches to use kernel major version
+    LS_KERNEL_MAJOR=
+    IFS=. read -a VERS <<< "$LS_KERNEL_VERSION"
+    if [ ${#VERS[@]} -ge 2 ]; then
+      LS_KERNEL_MAJOR="${VERS[0]}.${VERS[1]}"
+    fi
     # copy .config from template
-    [ -f "$MYDIR/config/$LS_KERNEL_VERSION" ] && {
-      echo "Copying .config from $MYDIR/config/$LS_KERNEL_VERSION..."
-      cp "$MYDIR/config/$LS_KERNEL_VERSION" .config
-    }
+    for VER in $LS_KERNEL_VERSION $LS_KERNEL_MAJOR; do
+      [ -f "$MYDIR/config/$VER" ] && {
+        echo "Copying .config from $MYDIR/config/${VER}..."
+        cp "$MYDIR/config/$VER" .config
+        break
+      }
+    done
     # apply patches
-    [ -d "$MYDIR/patches/$LS_KERNEL_VERSION" ] && {
-      for PATCH_FILE in `ls $MYDIR/patches/$LS_KERNEL_VERSION/*.patch`; do
-        echo "Applying patch `basename $PATCH_FILE`..."
-        git apply $PATCH_FILE
-      done
-    }
+    if [ "$LS_KERNEL_VERSION" != "$LS_KERNEL_MAJOR" ]; then
+      PATCHES="$LS_KERNEL_MAJOR $LS_KERNEL_VERSION"
+    else
+      PATCHES=$LS_KERNEL_VERSION
+    fi
+    for VER in $PATCHES; do
+      [ -d "$MYDIR/patches/$VER" ] && {
+        echo "Applying patches in ${VER}..."
+        for PATCH_FILE in `ls $MYDIR/patches/$VER/*.patch`; do
+          echo "Applying patch `basename $PATCH_FILE`..."
+          git apply $PATCH_FILE
+        done
+      }
+    done
   fi
 }
 

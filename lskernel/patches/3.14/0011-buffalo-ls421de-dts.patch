@@ -3,7 +3,7 @@ new file mode 100644
 index 0000000..a5e5d0b
 --- /dev/null
 +++ b/arch/arm/boot/dts/armada-370-ls421de.dts
-@@ -0,0 +1,284 @@
+@@ -0,0 +1,273 @@
 +/*
 + * Device Tree file for Buffalo LinkStation LS421DE
 + *
@@ -276,15 +276,4 @@ index 0000000..a5e5d0b
 +		                      5000 0>;
 +		alarm-gpios = <&gpio0 10 GPIO_ACTIVE_HIGH>;
 +	};
-+
-+	/*gpio-poweroff {
-+		compatible = "gpio-poweroff";
-+		pinctrl-0 = <&power_switch>;
-+		pinctrl-names = "default";
-+		gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
-+	};
-+
-+	restart-poweroff {
-+		compatible = "restart-poweroff";
-+	};*/
 +};

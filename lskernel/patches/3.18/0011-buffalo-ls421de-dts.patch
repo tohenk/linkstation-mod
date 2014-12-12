@@ -3,7 +3,7 @@ new file mode 100644
 index 0000000..0795018
 --- /dev/null
 +++ b/arch/arm/boot/dts/armada-370-ls421de.dts
-@@ -0,0 +1,268 @@
+@@ -0,0 +1,272 @@
 +/*
 + * Device Tree file for Buffalo LinkStation LS421DE
 + *
@@ -51,6 +51,10 @@ index 0000000..0795018
 +		};
 +
 +		internal-regs {
++			rtc@10300 {
++				status = "disabled";
++			};
++
 +			serial@12000 {
 +				status = "okay";
 +			};

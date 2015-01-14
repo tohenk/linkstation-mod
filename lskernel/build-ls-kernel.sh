@@ -132,7 +132,7 @@ TAG=`git status | grep "$KTAG"`
     LS_KERNEL_MAJOR=
     IFS=. read -a VERS <<< "$LS_KERNEL_VERSION"
     if [ ${#VERS[@]} -ge 2 ]; then
-      LS_KERNEL_MAJOR="${VERS[0]}.${VERS[1]}"
+      LS_KERNEL_MAJOR=`echo "${VERS[0]}.${VERS[1]}" | sed -e 's/\-rc[0-9]*//g'`
     fi
     # copy .config from template
     for VER in $LS_KERNEL_VERSION $LS_KERNEL_MAJOR; do

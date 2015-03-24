@@ -19,6 +19,9 @@ else
     --config)
       BUILD_CONFIG=1
       ;;
+    --kver)
+      BUILD_KERNEL_VER=1
+      ;;
     --kernel)
       BUILD_KERNEL=1
       ;;
@@ -47,6 +50,7 @@ fi
   echo "--all          Build all (clean, config if not configured, kernel, and, DT)"
   echo "--clean        Clean kernel source dir tree"
   echo "--config       Perform kernel cofiguration"
+  echo "--kver         Choose which kernel version to use"
   echo "--kernel       Build kernel images and modules"
   echo "--dt           Build kernel DT"
   echo "--package      Package kernel and modules as tar archive"
@@ -62,6 +66,7 @@ OUTDIR=$CDIR/build
 MYDIR=`dirname $0`
 MYDIR=`pushd $MYDIR > /dev/null && pwd -P && popd > /dev/null`
 
+. $MYDIR/build-ls-functions.sh
 . $MYDIR/build-ls-kernel.cfg
 
 KERNEL_DIR=$MYDIR/linux
@@ -100,6 +105,43 @@ cd "$KERNEL_DIR"
   # switch to master
   git checkout master
   git pull
+  exit 1
+}
+
+# Choose kernel version, only show kernel version matched available configs
+[ "x$BUILD_KERNEL_VER" = "x1" ] && {
+  VERS=()
+  KCNT=0
+  for VER in `cd $MYDIR/config && ls`; do
+    KVER=`kernel_latest_ver $VER`
+    if [ -n "$KVER" ]; then
+      KCNT=$((KCNT+1))
+      VERS[$KCNT]=${KVER:1}
+    fi
+  done
+  # Show latest kernel version
+  if [ $KCNT -ge 1 ]; then
+    echo "List of available kernel versions:"
+    CNT=0
+    while true; do
+      if [ $CNT -eq $KCNT ]; then break; fi
+      CNT=$((CNT+1))
+      echo "${CNT}. Linux kernel ${VERS[$CNT]}"
+    done
+    # wait for input
+    while true; do
+      echo -n "Type choice [1-${KCNT}]? " && read CHOICE
+      # ignore if just empty
+      if [ -z "$CHOICE" ]; then
+        break
+      fi
+      if [ $CHOICE -ge 1 -a $CHOICE -le $KCNT ]; then
+        echo "Kernel version ${VERS[$CHOICE]} selected."
+        sed -i -e "s/LS_KERNEL_VERSION=.*/LS_KERNEL_VERSION=${VERS[$CHOICE]}/" $MYDIR/build-ls-kernel.cfg
+        break
+      fi
+    done
+  fi
   exit 1
 }
 

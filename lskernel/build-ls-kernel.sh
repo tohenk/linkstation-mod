@@ -74,6 +74,7 @@ KERNEL_BOOT_DIR=$KERNEL_DIR/arch/$LS_KERNEL_ARCH/boot
 KERNEL_IMAGE=$KERNEL_BOOT_DIR/zImage
 KERNEL_DT=$KERNEL_BOOT_DIR/dts/$LS_KERNEL_DT
 KERNEL_GIT=${KERNEL_GIT:=https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git}
+JOB=${LS_KERNEL_JOB:=4}
 
 # Download kernel source
 [ "x$BUILD_DOWNLOAD" = "x1" ] && {
@@ -227,7 +228,7 @@ TAG=`git status | grep "$KTAG"`
 
 # Compile zImage and modules
 [ "x$BUILD_KERNEL" = "x1" ] && {
-  make ARCH=$LS_KERNEL_ARCH CROSS_COMPILE=$LS_KERNEL_CROSS_COMPILE -j4 zImage modules
+  make ARCH=$LS_KERNEL_ARCH CROSS_COMPILE=$LS_KERNEL_CROSS_COMPILE -j$JOB zImage modules
   [ ! -f "$KERNEL_IMAGE" ] && {
     echo "Kernel image not found, aborting."
     exit 1

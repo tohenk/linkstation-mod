@@ -2,7 +2,7 @@
 
 # Parse parameters
 if [ $# -eq 0 ]; then
-  BUILD_ALL=1
+  BUILD_HELP=1
 else
   BUILD_ALL=0
   while [ $# -gt 0 ]; do

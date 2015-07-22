@@ -53,26 +53,74 @@ package_rootfs() {
   cd "$SRCDIR" && tar --numeric-owner -p -czf "$IMG" *
 }
 
-extract_initrd_cpio() {
-  local OUTDIR=$1
-  local IMG=$2
-  local INITRD_GZ=$3
-  local INITRD=`basename $INITRD_GZ`
-  INITRD="`dirname $INITRD_GZ`/${INITRD%.*}"
-  dd if="$IMG" of="$INITRD_GZ" ibs=64 skip=1 1>/dev/null 2>/dev/null
-  gunzip "$INITRD_GZ"
+extract_initrd() {
+  local COMPRESSOR=$1
+  local OUTDIR=$2
+  local IMG=$3
+  local INITRD_FILE=$4
+  local MYCMD=
+
+  case $COMPRESSOR in
+    gzip)
+      MYCMD="gunzip"
+      ;;
+    bzip2)
+      MYCMD="bunzip2"
+      ;;
+    lzma)
+      MYCMD="xz -F lzma --decompress"
+      ;;
+    lzo)
+      MYCMD="lzop --decompress"
+      ;;
+    *)
+      show_info "Unsupported de-compressor $COMPRESSOR."
+      return
+      ;;
+  esac
+
+  local INITRD=`basename $INITRD_FILE`
+  INITRD="`dirname $INITRD_FILE`/${INITRD%.*}"
+  dd if="$IMG" of="$INITRD_FILE" ibs=64 skip=1 1>/dev/null 2>/dev/null
+  $MYCMD "$INITRD_FILE"
   clean_dir "$OUTDIR"
   cd "$OUTDIR" && cat "$INITRD" | cpio -id --quiet
 }
 
-create_initrd_cpio() {
-  local SRCDIR=$1
-  local INITRD=$2
-  local INITRD_IMG=$3
+create_initrd() {
+  local COMPRESSOR=$1
+  local SRCDIR=$2
+  local INITRD=$3
+  local INITRD_IMG=$4
+  local MYCMD=
+  local MYOUT=
+
+  case $COMPRESSOR in
+    gzip)
+      MYCMD="gzip -f"
+      MYOUT=${INITRD}.gz
+      ;;
+    bzip2)
+      MYCMD="bzip2 -z"
+      MYOUT=${INITRD}.bz2
+      ;;
+    lzma)
+      MYCMD="xz -F lzma -z"
+      MYOUT=${INITRD}.lzma
+      ;;
+    lzo)
+      MYCMD="lzop"
+      MYOUT=${INITRD}.lzo
+      ;;
+    *)
+      show_info "Unsupported compressor $COMPRESSOR."
+      return
+      ;;
+  esac
   cd "$SRCDIR" && find . | cpio -oH newc --quiet > "$INITRD"
-  gzip -f "$INITRD"
-  mkimage -A ARM -O Linux -T ramdisk -C gzip -a 0x00000000 -e 0x00000000 -n initrd -d "${INITRD}.gz" "$INITRD_IMG" >/dev/null
-  rm -f "${INITRD}.gz"
+  $MYCMD "$INITRD"
+  mkimage -A ARM -O Linux -T ramdisk -C $COMPRESSOR -a 0x00000000 -e 0x00000000 -n initrd -d "$MYOUT" "$INITRD_IMG" >/dev/null
+  rm -f "$MYOUT"
 }
 
 pack_firmware() {

@@ -51,6 +51,7 @@ NETWORK_DOMAIN=${NETWORK_DOMAIN:=}
 
 INITRD_TEMP_ROOT=${INITRD_TEMP_ROOT:=}
 INITRD_ROOT=${INITRD_ROOT:=}
+INITRD_FORMAT=${INITRD_FORMAT:=gzip}
 
 do_prep_dirs() {
   show_msg "Preparing directories"
@@ -145,7 +146,7 @@ do_create_temp_initrd() {
     linuxrc_raid $INITRD_TEMP_ROOT >"$INITRD_DIR/linuxrc" 
   fi
   chmod +x "$INITRD_DIR/linuxrc"
-  create_initrd_cpio "$INITRD_DIR" "$OUTDIR/initrd" "$OUTDIR/initrd.buffalo.temporary"
+  create_initrd $INITRD_FORMAT "$INITRD_DIR" "$OUTDIR/initrd" "$OUTDIR/initrd.buffalo.temporary"
 }
 
 do_create_initrd() {
@@ -158,7 +159,7 @@ do_create_initrd() {
     linuxrc_raid $INITRD_ROOT >"$INITRD_DIR/linuxrc" 
   fi
   chmod +x "$INITRD_DIR/linuxrc"
-  create_initrd_cpio "$INITRD_DIR" "$OUTDIR/initrd" "$OUTDIR/initrd.buffalo"
+  create_initrd $INITRD_FORMAT "$INITRD_DIR" "$OUTDIR/initrd" "$OUTDIR/initrd.buffalo"
 }
 
 main() {

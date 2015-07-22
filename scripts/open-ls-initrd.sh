@@ -54,9 +54,9 @@ do_unpack_initrd() {
   fi
 }
 
-do_extract_initrd_cpio() {
-  show_msg "Extracting INITRD using cpio"
-  extract_initrd_cpio "$INITRD" "$ORIGINAL/$INITRD_FILE_NAME" "$ORIGINAL/initrd.gz"
+do_extract_initrd() {
+  show_msg "Extracting INITRD using GZIP"
+  extract_initrd gzip "$INITRD" "$ORIGINAL/$INITRD_FILE_NAME" "$ORIGINAL/initrd.gz"
 }
 
 do_enable_sftp() {
@@ -120,7 +120,7 @@ do_run_emergency_script_in_rcS() {
 
 do_package_initrd() {
   show_msg "Create and package INITRD"
-  create_initrd_cpio "$INITRD" "$OUTDIR/initrd" "$OUTDIR/$INITRD_FILE_NAME"
+  create_initrd gzip "$INITRD" "$OUTDIR/initrd" "$OUTDIR/$INITRD_FILE_NAME"
   pack_firmware "$OUTDIR" "$INITRD_IMG_NAME" "$INITRD_FILE_NAME" "$PASSWORD"
   if [ -f "$OUTDIR/$INITRD_IMG_NAME" ]; then
     show_info "Opened INITRD image saved in $OUTDIR/$INITRD_IMG_NAME."
@@ -147,7 +147,7 @@ main() {
   if [ -z "$PASSWORD" ]; then
     exit 1;
   fi
-  do_extract_initrd_cpio
+  do_extract_initrd
   do_enable_sftp
   do_patch_features
   do_remove_root_password

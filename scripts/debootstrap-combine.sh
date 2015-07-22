@@ -129,7 +129,7 @@ EOF
     fi
   fi
   show_info "Creating mount point."
-  cd "$WORK_DIR" && mkdir -p media/data
+  cd "$WORK_DIR" && mkdir -p media/disk1 media/disk2
   show_info "Copying kernel modules."
   cd "$HDDROOT_DIR" && tar -cf - lib/modules/ | (cd "$WORK_DIR"; tar -xf -)
   show_info "Package ROOTFS."

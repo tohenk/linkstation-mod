@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Original script from http://buffalo.nas-central.org/wiki/Open_Stock_Firmware_LS-XHL
 # Modified by Toha <tohenk@yahoo.com>
@@ -14,6 +14,7 @@ if [ ! -f "$1" ]; then
 fi
 
 MYDIR=`dirname $0`
+MYDIR=`pushd $MYDIR > /dev/null && pwd -P && popd > /dev/null`
 ROOT=`pwd`
 OUTDIR=$ROOT/out
 TMP=$ROOT/tmp

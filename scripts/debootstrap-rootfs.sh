@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 # Copyright (C) 2013 Yasunari YAMASHITA. All Rights Reserved.
@@ -8,6 +8,7 @@
 #
 
 MYDIR=`dirname $0`
+MYDIR=`pushd $MYDIR > /dev/null && pwd -P && popd > /dev/null`
 CDIR=`pwd`
 DEBINST=$CDIR/debian
 OUTDIR=$CDIR/rootfs

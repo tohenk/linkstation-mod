@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # check for parameters
 if [ $# -ne 3 ]; then
@@ -26,6 +26,7 @@ if [ ! -d "$3" ] || [ ! -f "$3/hddrootfs.img" ]; then
 fi
 
 MYDIR=`dirname $0`
+MYDIR=`pushd $MYDIR > /dev/null && pwd -P && popd > /dev/null`
 ROOT=`pwd`
 OUTDIR=$ROOT/out
 DATADIR=$ROOT/data
@@ -175,7 +176,8 @@ main() {
   }
   do_create_initrd
 
-  echo "\nDone.\n"
+  echo "Done."
+  echo
 }
 
 main

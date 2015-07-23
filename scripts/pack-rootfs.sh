@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ ! -d "$1" ]; then
   echo "Input directory bot found $1.\n"
@@ -10,6 +10,7 @@ if [ -z "$2" ]; then
 fi
 
 MYDIR=`dirname $0`
+MYDIR=`pushd $MYDIR > /dev/null && pwd -P && popd > /dev/null`
 ROOT=`pwd`
 IMG=$2
 SRCDIR=$1

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ ! -f "$1" ]; then
   echo "File not found $1.\n"
@@ -10,6 +10,7 @@ if [ -z "$2" ]; then
 fi
 
 MYDIR=`dirname $0`
+MYDIR=`pushd $MYDIR > /dev/null && pwd -P && popd > /dev/null`
 ROOT=`pwd`
 IMG=$1
 OUTDIR=$2

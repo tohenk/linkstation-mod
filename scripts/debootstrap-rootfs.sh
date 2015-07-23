@@ -2,6 +2,8 @@
 
 #
 # Copyright (C) 2013 Yasunari YAMASHITA. All Rights Reserved.
+# Copyright (C) 2015 Toha <tohenk@yahoo.com>
+#
 # Modified for LS421DE by Toha <tohenk@yahoo.com>
 #
 
@@ -10,37 +12,78 @@ CDIR=`pwd`
 DEBINST=$CDIR/debian
 OUTDIR=$CDIR/rootfs
 
+. $MYDIR/ls-functions.sh
 . $MYDIR/debootstrap-rootfs.cfg
 
 ARCH=${ARCH:=armhf}
 VERSION=${VERSION:=wheezy}
 MIRROR=${MIRROR:=http://ftp.us.debian.org/debian}
 PACKAGES=${PACKAGES:=}
-PACKAGES+=" openssh-server xfsprogs psmisc sudo busybox vim less"
+PACKAGES+=" aptitude openssh-server xfsprogs psmisc sudo busybox vim less"
+USER=${USER:=guest}
+
+MYSHELL=/bin/bash
+DEBINST_BASE=$DEBINST/base
+DEBINST_SYSTEM=$DEBINST/system
+DEBINST_PACKAGE=$DEBINST/base.tar.gz
+ROOTFS_PACKAGE=$OUTDIR/rootfs_${VERSION}_${ARCH}_`date +%y%m%d`.tar.gz
+INITRD_PACKAGE=$OUTDIR/initrd_${VERSION}_${ARCH}_`date +%y%m%d`.tar.gz
 
 do_debootstrap() {
-  date
+  show_msg "Debootstrapping $VERSION on `date`"
 
-  /usr/sbin/debootstrap --arch $ARCH $VERSION $DEBINST $MIRROR
+  if [ -f $DEBINST_PACKAGE ]; then
+    show_info "Skipping debootstrap, already done..."
+    return 0
+  fi
+
+  if [ -d $DEBINST_BASE ]; then
+    rm -rf $DEBINST_BASE
+  fi
+  mkdir -p $DEBINST_BASE
+  debootstrap --arch $ARCH $VERSION $DEBINST_BASE $MIRROR
+  if [ $? -eq 0 ]; then
+    cd $DEBINST_BASE && tar --numeric-owner -p -czf $DEBINST_PACKAGE *
+    rm -rf $DEBINST_BASE
+    show_info "Done $DEBINST_PACKAGE..."
+    return 0
+  fi
+  return 1
 }
 
 do_customize() {
-  date
+  show_msg "Customize $VERSION on `date`"
+
+  if [ ! -f $DEBINST_PACKAGE ]; then
+    show_info "Aborting customization, debootstrap package not found..."
+    return 1
+  fi
+
+  # try unmount procfs
+  if [ -d $DEBINST_SYSTEM/proc ]; then
+    umount $DEBINST_SYSTEM/proc 2> /dev/null
+  fi
+
+  # clean everything
+  if [ -d $DEBINST_SYSTEM ]; then
+    rm -rf $DEBINST_SYSTEM
+  fi
+  mkdir -p $DEBINST_SYSTEM
+
+  # extract deboostrap package
+  tar -xf $DEBINST_PACKAGE -C $DEBINST_SYSTEM
 
   # copy /dev
-  #(cd /; tar -cf - dev)|(cd $DEBINST; tar -xf -)
+  #(cd /; tar -cf - dev)|(cd $DEBINST_SYSTEM; tar -xf -)
   
   # prepare raid initrd
-  [ -d $DEBINST/initrd ] && rm -rf $DEBINST/initrd
-  mkdir -p $DEBINST/initrd
+  [ -d $DEBINST_SYSTEM/initrd ] && rm -rf $DEBINST_SYSTEM/initrd
+  mkdir -p $DEBINST_SYSTEM/initrd
 
   # mount /proc
-  chroot $DEBINST mount -t proc /proc proc
+  chroot $DEBINST_SYSTEM mount -t proc none /proc
 
-  # reconfigure TimeZone
-  chroot $DEBINST dpkg-reconfigure tzdata
-
-  local APT=`cat $DEBINST/etc/apt/sources.list | grep "deb-src $MIRROR $VERSION main"`
+  local APT=`cat $DEBINST_SYSTEM/etc/apt/sources.list | grep "deb-src $MIRROR $VERSION main"`
   [ -z "$APT" ] && {
     # edit /etc/apt/sources.list
     (
@@ -54,77 +97,92 @@ do_customize() {
     echo
     echo deb http://security.debian.org/ $VERSION/updates main
     echo deb-src http://security.debian.org/ $VERSION/updates main
-    ) >> $DEBINST/etc/apt/sources.list
+    ) >> $DEBINST_SYSTEM/etc/apt/sources.list
   }
 
   # update package lists
-  chroot $DEBINST apt-get update
-  chroot $DEBINST apt-get -y -f install
-  chroot $DEBINST apt-get -y upgrade
+  chroot $DEBINST_SYSTEM apt-get update
  
   # install & reconfigure locales
-  chroot $DEBINST apt-get install locales
-  chroot $DEBINST dpkg-reconfigure locales
+  chroot $DEBINST_SYSTEM $MYSHELL -c "
+export LANG=C
+apt-get install locales
+dpkg-reconfigure locales"
+
+  # reconfigure TimeZone
+  chroot $DEBINST_SYSTEM dpkg-reconfigure tzdata
+
+  # forced upgrade
+  chroot $DEBINST_SYSTEM apt-get -y -f install
+  chroot $DEBINST_SYSTEM apt-get -y upgrade
 
   # adding missing devices
-  chroot $DEBINST apt-get install -y makedev
-  chroot $DEBINST /bin/bash -c " 
+  chroot $DEBINST_SYSTEM apt-get install -y makedev
+  # workaround in case armhf not supported by MAKEDEV
+  sed -i -e "s/arm|armeb|armel/arm|armeb|armel|armhf/g" $DEBINST_SYSTEM/sbin/MAKEDEV
+  chroot $DEBINST_SYSTEM $MYSHELL -c "
 cd /dev
-/sbin/MAKEDEV generic
-/sbin/MAKEDEV md"
+MAKEDEV generic
+MAKEDEV md"
 
   # install mdadm
-  chroot $DEBINST apt-get --no-install-recommends install mdadm
+  chroot $DEBINST_SYSTEM apt-get --no-install-recommends install mdadm
 
   # update password of root
-  chroot $DEBINST passwd root
+  chroot $DEBINST_SYSTEM passwd root
 
   # install some packages
-  chroot $DEBINST apt-get -y install $PACKAGES
+  chroot $DEBINST_SYSTEM apt-get -y install $PACKAGES
 
   # edit /etc/inetd.conf
-  #TARGETFILE=$DEBINST/etc/inetd.conf
+  #TARGETFILE=$DEBINST_SYSTEM/etc/inetd.conf
   #sed \
   #        -e 's/^## telnet/telnet/' \
   #        -i $TARGETFILE
 
-  # add guest user
-  chroot $DEBINST adduser --gecos "" guest
-  rm -rf $DEBINST/home/guest
+  # add user
+  chroot $DEBINST_SYSTEM adduser --gecos "$USER" $USER
+  rm -rf $DEBINST_SYSTEM/home/$USER
 
   # edit /etc/inittab
-  TARGETFILE=$DEBINST/etc/inittab
-  sed \
-    -e 's/^\([0-9]:[0-9]*:respawn:.*\)$/#\1/' \
-    -e '/^#T1/aT0:2345:respawn:/sbin/getty -L ttyS0 115200 vt100' \
-    -i $TARGETFILE
+  TARGETFILE=$DEBINST_SYSTEM/etc/inittab
+  if [ -f $TARGETFILE ]; then
+    sed \
+      -e 's/^\([0-9]:[0-9]*:respawn:.*\)$/#\1/' \
+      -e '/^#T1/aT0:2345:respawn:/sbin/getty -L ttyS0 115200 vt100' \
+      -i $TARGETFILE
+  fi
 
   # clean up
-  chroot $DEBINST apt-get clean
+  chroot $DEBINST_SYSTEM apt-get clean
 
   # create /etc/adjtime
   (
   echo 0.0 0 0.0
   echo 0
   echo LOCAL
-  ) > $DEBINST/etc/adjtime
+  ) > $DEBINST_SYSTEM/etc/adjtime
 
   # copy ssh authorized_keys 
   if [ -f /root/.ssh/authorized_keys ]; then
-    mkdir -p $DEBINST/root/.ssh
-    cp /root/.ssh/authorized_keys $DEBINST/root/.ssh/
+    mkdir -p $DEBINST_SYSTEM/root/.ssh
+    cp /root/.ssh/authorized_keys $DEBINST_SYSTEM/root/.ssh/
   fi
 
   # stopping services
   for SERVICE in mdadm-raid mdadm ssh; do
-    chroot $DEBINST /etc/init.d/$SERVICE stop
+    chroot $DEBINST_SYSTEM /etc/init.d/$SERVICE stop
   done
 
   # umount /proc
-  chroot $DEBINST umount /proc
+  chroot $DEBINST_SYSTEM umount /proc
 
   # make archive
-  cd $DEBINST && tar --numeric-owner -p -czvf $OUTDIR/rootfs_"$VERSION"_"$ARCH"_`date +%y%m%d`.tar.gz *
+  cd $DEBINST_SYSTEM && tar --numeric-owner -p -czf $ROOTFS_PACKAGE *
+
+  show_info "Done $ROOTFS_PACKAGE..."
+
+  return 0
 }
 
 copy_libs() {
@@ -137,30 +195,37 @@ copy_libs() {
 }
 
 prepare_initrd() {
-  mkdir -p $DEBINST/initrd/{bin,lib,dev,etc/mdadm,proc,sbin}
-  cp -a $DEBINST/dev/{null,console,tty,sd{a,b,c,d}?,md*} $DEBINST/initrd/dev/
- 
-  cp $DEBINST/bin/busybox $DEBINST/initrd/bin/
-  for BIN in sh; do
-    cd $DEBINST/initrd/bin && ln -s busybox $BIN
-  done;
-  cp $DEBINST/sbin/mdadm $DEBINST/initrd/sbin/
+  show_msg "Creating $VERSION INITRD on `date`"
 
-  #cp $DEBINST/lib/{libm.so.6,libc.so.6,libgcc_s.so.1,ld-linux.so.3} $DEBINST/initrd/lib/
-  #LIBS=$(ldd $DEBINST/initrd/*bin/* | grep -v "^$DEBINST/initrd/" | sed -e 's/.*=> *//'  -e 's/ *(.*//' | sort -u)
-  #cd $DEBINST && cp -aL $LIBS $DEBINST/initrd/lib
-
-  local LIBM=`cd "$DEBINST" && find lib -name libm.so.6`
-  if [ -n "$LIBM" ]; then
-    mkdir -p "`dirname $DEBINST/initrd/$LIBM`"
-    cp -aLv "$DEBINST/$LIBM" "$DEBINST/initrd/$LIBM"
+  if [ ! -f $DEBINST_PACKAGE ]; then
+    show_info "Aborting INITRD, debootstrap package not found..."
+    return 1
   fi
 
-  copy_libs "$DEBINST" /initrd/bin/
-  copy_libs "$DEBINST" /initrd/sbin/
-  copy_libs "$DEBINST" /initrd/lib
+  mkdir -p $DEBINST_SYSTEM/initrd/{bin,lib,dev,etc/mdadm,proc,sbin}
+  cp -a $DEBINST_SYSTEM/dev/{null,console,tty,sd{a,b,c,d}?,md*} $DEBINST_SYSTEM/initrd/dev/
  
-  cat > $DEBINST/initrd/linuxrc <<EOF
+  cp $DEBINST_SYSTEM/bin/busybox $DEBINST_SYSTEM/initrd/bin/
+  for BIN in sh; do
+    cd $DEBINST_SYSTEM/initrd/bin && ln -s busybox $BIN
+  done
+  cp $DEBINST_SYSTEM/sbin/mdadm $DEBINST_SYSTEM/initrd/sbin/
+
+  #cp $DEBINST_SYSTEM/lib/{libm.so.6,libc.so.6,libgcc_s.so.1,ld-linux.so.3} $DEBINST_SYSTEM/initrd/lib/
+  #LIBS=$(ldd $DEBINST_SYSTEM/initrd/*bin/* | grep -v "^$DEBINST_SYSTEM/initrd/" | sed -e 's/.*=> *//'  -e 's/ *(.*//' | sort -u)
+  #cd $DEBINST_SYSTEM && cp -aL $LIBS $DEBINST_SYSTEM/initrd/lib
+
+  local LIBM=`cd "$DEBINST_SYSTEM" && find lib -name libm.so.6`
+  if [ -n "$LIBM" ]; then
+    mkdir -p "`dirname $DEBINST_SYSTEM/initrd/$LIBM`"
+    cp -aLv "$DEBINST_SYSTEM/$LIBM" "$DEBINST_SYSTEM/initrd/$LIBM"
+  fi
+
+  copy_libs "$DEBINST_SYSTEM" /initrd/bin/
+  copy_libs "$DEBINST_SYSTEM" /initrd/sbin/
+  copy_libs "$DEBINST_SYSTEM" /initrd/lib
+ 
+  cat > $DEBINST_SYSTEM/initrd/linuxrc <<EOF
 #!/bin/sh
  
 # Mount the /proc and /sys filesystems.
@@ -186,19 +251,31 @@ umount /sys
 
 exit 0
 EOF
-  chmod +x $DEBINST/initrd/linuxrc
+  chmod +x $DEBINST_SYSTEM/initrd/linuxrc
 
   # archive initrd
-  cd $DEBINST/initrd && tar --numeric-owner -p -czvf $OUTDIR/initrd_"$VERSION"_"$ARCH"_`date +%y%m%d`.tar.gz *
+  cd $DEBINST_SYSTEM/initrd && tar --numeric-owner -p -czf $INITRD_PACKAGE *
+
+  show_info "Done $INITRD_PACKAGE..."
+
+  return 0
 }
 
 # make working directory
-[ -d $DEBINST -a "x$1" = "x--clean" ] && rm -rf $DEBINST
+[ -d $DEBINST -a "x$1" = "x--clean" ] && {
+  [ -d $DEBINST_SYSTEM/proc ] && {
+    umount $DEBINST_SYSTEM/proc 2> /dev/null
+  }
+  rm -rf $DEBINST
+}
+mkdir -p $DEBINST $OUTDIR
 
-mkdir -p $OUTDIR
-if [ ! -d $DEBINST ]; then
-  mkdir -p $DEBINST
-  do_debootstrap
-fi
-do_customize
-prepare_initrd
+for MYCMD in do_debootstrap do_customize prepare_initrd; do
+  $MYCMD
+  if [ ! $? -eq 0 ]; then
+    show_info "Aborted."
+    exit 1
+  fi
+done
+
+exit 0

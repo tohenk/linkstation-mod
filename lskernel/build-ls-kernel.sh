@@ -22,6 +22,9 @@ else
     --kver)
       BUILD_KERNEL_VER=1
       ;;
+    --toolchain)
+      BUILD_TOOLCHAIN=1
+      ;;
     --kernel)
       BUILD_KERNEL=1
       ;;
@@ -51,6 +54,7 @@ fi
   echo "--clean        Clean kernel source dir tree"
   echo "--config       Perform kernel cofiguration"
   echo "--kver         Choose which kernel version to use"
+  echo "--toolchain    Configure toolchain to use"
   echo "--kernel       Build kernel images and modules"
   echo "--dt           Build kernel DT"
   echo "--package      Package kernel and modules as tar archive"
@@ -112,39 +116,68 @@ cd "$KERNEL_DIR"
 # Choose kernel version, only show kernel version matched available configs
 [ "x$BUILD_KERNEL_VER" = "x1" ] && {
   VERS=()
-  KCNT=0
+  CNT=0
   for VER in `cd $MYDIR/config && ls`; do
     KVER=`kernel_latest_ver $VER`
     if [ -n "$KVER" ]; then
-      KCNT=$((KCNT+1))
-      VERS[$KCNT]=${KVER:1}
+      CNT=$((CNT+1))
+      VERS[$CNT]=${KVER:1}
     fi
   done
-  # Show latest kernel version
-  if [ $KCNT -ge 1 ]; then
-    echo "List of available kernel versions:"
-    CNT=0
-    while true; do
-      if [ $CNT -eq $KCNT ]; then break; fi
-      CNT=$((CNT+1))
-      echo "${CNT}. Linux kernel ${VERS[$CNT]}"
-    done
-    # wait for input
-    while true; do
-      echo -n "Type choice [1-${KCNT}]? " && read CHOICE
-      # ignore if just empty
-      if [ -z "$CHOICE" ]; then
-        break
-      fi
-      if [ $CHOICE -ge 1 -a $CHOICE -le $KCNT ]; then
-        echo "Kernel version ${VERS[$CHOICE]} selected."
-        sed -i -e "s/LS_KERNEL_VERSION=.*/LS_KERNEL_VERSION=${VERS[$CHOICE]}/" $MYDIR/build-ls-kernel.cfg
-        break
-      fi
-    done
+  # Show kernel version choices
+  if [ $CNT -ge 1 ]; then
+    choices VERS "List of available kernel versions" "%d. Linux kernel %s"
+    CHOICE=$?
+    if [ $CHOICE -ge 1 ]; then
+      echo "Kernel version ${VERS[$CHOICE]} selected."
+      sed -i -e "s/LS_KERNEL_VERSION=.*/LS_KERNEL_VERSION=${VERS[$CHOICE]}/" $MYDIR/build-ls-kernel.cfg
+    fi
   fi
   exit 1
 }
+
+# Configure toolchain to use
+mkdir -p $MYDIR/toolchain
+[ "x$BUILD_TOOLCHAIN" = "x1" ] && {
+  TOOLCHAINS=()
+  CNT=0
+  for TC in `get_toolchain $MYDIR/toolchain`; do
+    CNT=$((CNT+1))
+    TOOLCHAINS[$CNT]=$TC
+  done
+  # Show toolchain choices
+  if [ $CNT -ge 1 ]; then
+    choices TOOLCHAINS "Choose toolchain"
+    CHOICE=$?
+    if [ $CHOICE -ge 1 ]; then
+      echo "Toolchain used ${TOOLCHAINS[$CHOICE]}."
+      sed -i -e "s/LS_KERNEL_TOOLCHAIN=.*/LS_KERNEL_TOOLCHAIN=${TOOLCHAINS[$CHOICE]}/" $MYDIR/build-ls-kernel.cfg
+    fi
+  else
+    toolchain_not_found $MYDIR/toolchain
+  fi
+  exit 1
+}
+
+# Check toolchain
+if [ -z "$LS_KERNEL_TOOLCHAIN" ]; then
+  echo "Toolchain not configured, use --toolchain to configure."
+  exit 1
+else
+  LS_KERNEL_CROSS_COMPILE=`check_toolchain $MYDIR/toolchain $LS_KERNEL_TOOLCHAIN`
+  case $? in
+    2)
+      toolchain_not_found $MYDIR/toolchain
+      exit 1
+      ;;
+    1)
+      echo "Invalid toolchain used, use --toolchain to configure."
+      exit 1
+      ;;
+    0)
+      ;;
+  esac
+fi
 
 # Checkout version
 DO_CHECKOUT=1

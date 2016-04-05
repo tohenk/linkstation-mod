@@ -75,7 +75,8 @@ MYDIR=`pushd $MYDIR > /dev/null && pwd -P && popd > /dev/null`
 
 KERNEL_DIR=$MYDIR/linux
 KERNEL_BOOT_DIR=$KERNEL_DIR/arch/$LS_KERNEL_ARCH/boot
-KERNEL_IMAGE=$KERNEL_BOOT_DIR/zImage
+KERNEL_IMAGE=zImage
+KERNEL_OUT=$KERNEL_BOOT_DIR/$KERNEL_IMAGE
 KERNEL_DT=$KERNEL_BOOT_DIR/dts/$LS_KERNEL_DT
 KERNEL_GIT=${KERNEL_GIT:=https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git}
 JOB=${LS_KERNEL_JOB:=4}
@@ -259,10 +260,10 @@ TAG=`git status | grep "$KTAG"`
   make ARCH=$LS_KERNEL_ARCH menuconfig
 }
 
-# Compile zImage and modules
+# Compile kernel image and modules
 [ "x$BUILD_KERNEL" = "x1" ] && {
-  make ARCH=$LS_KERNEL_ARCH CROSS_COMPILE=$LS_KERNEL_CROSS_COMPILE -j$JOB zImage modules
-  [ ! -f "$KERNEL_IMAGE" ] && {
+  make ARCH=$LS_KERNEL_ARCH CROSS_COMPILE=$LS_KERNEL_CROSS_COMPILE -j$JOB $KERNEL_IMAGE modules
+  [ ! -f "$KERNEL_OUT" ] && {
     echo "Kernel image not found, aborting."
     exit 1
   }
@@ -281,8 +282,8 @@ fi
 # Build package
 [ "x$BUILD_PACKAGE" = "x1" ] && {
   # Check for kernel image
-  [ ! -f "$KERNEL_IMAGE" ] && {
-    echo "Package not built, kernel not found."
+  [ ! -f "$KERNEL_OUT" ] && {
+    echo "Package not built, kernel image not found."
     exit 1
   }
 
@@ -298,12 +299,12 @@ fi
 
   # Append DTB first
   [ -f "${KERNEL_DT}.dtb" ] && {
-    cat $KERNEL_IMAGE ${KERNEL_DT}.dtb > ${KERNEL_IMAGE}.dtb
-    KERNEL_IMAGE=${KERNEL_IMAGE}.dtb
+    cat $KERNEL_OUT ${KERNEL_DT}.dtb > ${KERNEL_OUT}.dtb
+    KERNEL_OUT=${KERNEL_OUT}.dtb
   }
 
   # Make kernel image
-  mkimage -A $LS_KERNEL_ARCH -O linux -T kernel -C none -a 0x00008000 -e 0x00008000 -n "Linux-$LS_KERNEL_VERSION" -d $KERNEL_IMAGE $OUTDIR/boot/uImage.buffalo
+  mkimage -A $LS_KERNEL_ARCH -O linux -T kernel -C none -a 0x00008000 -e 0x00008000 -n "Linux-$LS_KERNEL_VERSION" -d $KERNEL_OUT $OUTDIR/boot/uImage.buffalo
 
   # Install kernel modules
   make ARCH=$LS_KERNEL_ARCH INSTALL_MOD_PATH=$OUTDIR modules_install

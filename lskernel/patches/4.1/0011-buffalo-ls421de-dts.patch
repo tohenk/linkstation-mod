@@ -65,7 +65,7 @@ index 0000000..894f152
 +	};
 +
 +	chosen {
-+		bootargs = "console=ttyS0,115200 earlyprintk";
++		bootargs = "earlyprintk";
 +		stdout-path = "serial0:115200n8";
 +	};
 +

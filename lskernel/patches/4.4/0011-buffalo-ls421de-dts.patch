@@ -1,9 +1,9 @@
 diff --git a/arch/arm/boot/dts/armada-370-ls421de.dts b/arch/arm/boot/dts/armada-370-ls421de.dts
 new file mode 100644
-index 0000000..894f152
+index 0000000..5732f64
 --- /dev/null
 +++ b/arch/arm/boot/dts/armada-370-ls421de.dts
-@@ -0,0 +1,327 @@
+@@ -0,0 +1,329 @@
 +/*
 + * Device Tree file for Buffalo LinkStation LS421DE
 + *
@@ -76,7 +76,8 @@ index 0000000..894f152
 +
 +	soc {
 +		ranges = <MBUS_ID(0xf0, 0x01) 0 0xd0000000 0x100000
-+			  MBUS_ID(0x01, 0xe0) 0 0xfff00000 0x100000>;
++			  MBUS_ID(0x01, 0xe0) 0 0xfff00000 0x100000
++			  MBUS_ID(0x09, 0x01) 0 0xf1100000 0x10000>;
 +
 +		pcie-controller {
 +			status = "okay";
@@ -98,6 +99,7 @@ index 0000000..894f152
 +
 +			spi@10600 {
 +				status = "okay";
++				pinctrl-0 = <&spi0_pins2>;
 +
 +				spi-flash@0 {
 +					#address-cells = <1>;

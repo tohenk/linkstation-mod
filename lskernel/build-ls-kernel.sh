@@ -10,7 +10,7 @@ else
     -h|--help)
       BUILD_HELP=1
       ;;
-    --all)
+    --build)
       BUILD_ALL=1
       ;;
     --clean)
@@ -50,7 +50,7 @@ fi
   echo "`basename $0` [options...]"
   echo ""
   echo "Options:"
-  echo "--all          Build all (clean, config if not configured, kernel, and, DT)"
+  echo "--build        Build all (clean, config if not configured, kernel, and, DT)"
   echo "--clean        Clean kernel source dir tree"
   echo "--config       Perform kernel cofiguration"
   echo "--kver         Choose which kernel version to use"

@@ -65,7 +65,7 @@ index 0000000..68f22eab
 +	};
 +
 +	chosen {
-+		bootargs = "earlyprintk";
++		bootargs = "earlyprintk console=ttyUSB0,115200";
 +		stdout-path = "serial0:115200n8";
 +	};
 +

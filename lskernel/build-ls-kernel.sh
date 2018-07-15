@@ -118,7 +118,7 @@ cd "$KERNEL_DIR"
 [ "x$BUILD_KERNEL_VER" = "x1" ] && {
   VERS=()
   CNT=0
-  for VER in `cd $MYDIR/config && ls`; do
+  for VER in `cd $MYDIR/config && ls -v`; do
     KVER=`kernel_latest_ver $VER`
     if [ -n "$KVER" ]; then
       CNT=$((CNT+1))

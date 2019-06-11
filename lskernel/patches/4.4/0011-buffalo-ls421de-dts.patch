@@ -1,9 +1,9 @@
 diff --git a/arch/arm/boot/dts/armada-370-linkstation-ls421de.dts b/arch/arm/boot/dts/armada-370-linkstation-ls421de.dts
 new file mode 100644
-index 0000000..5732f64
+index 0000000..1c42652
 --- /dev/null
 +++ b/arch/arm/boot/dts/armada-370-linkstation-ls421de.dts
-@@ -0,0 +1,329 @@
+@@ -0,0 +1,338 @@
 +/*
 + * Device Tree file for Buffalo LinkStation LS421DE
 + *
@@ -218,26 +218,31 @@ index 0000000..5732f64
 +		compatible = "gpio-leds";
 +		pinctrl-names = "default";
 +		pinctrl-0 = <&power_led_pin &alarm_led_pin &info_led_pin
-+			&func_led_pin &sata1_led_pin &sata2_led_pin>;
++			&func_led_pin &funcred_led_pin &sata1_led_pin &sata2_led_pin>;
 +
 +		white-power-led {
 +			label = "ls421de:white:power";
 +			gpios = <&gpio1 22 GPIO_ACTIVE_HIGH>;
 +			default-state = "keep";
 +		};
-+		red-func-led {
-+			label = "ls421de:red:func";
++		red-alarm-led {
++			label = "ls421de:red:alarm";
 +			gpios = <&gpio1 23 GPIO_ACTIVE_HIGH>;
 +			default-state = "off";
 +		};
-+		white-info-led {
-+			label = "ls421de:white:info";
++		orange-info-led {
++			label = "ls421de:orange:info";
 +			gpios = <&gpio1 25 GPIO_ACTIVE_HIGH>;
 +			default-state = "off";
 +		};
 +		white-func-led {
 +			label = "ls421de:white:func";
 +			gpios = <&gpio1 27 GPIO_ACTIVE_HIGH>;
++			default-state = "off";
++		};
++		red-func-led {
++			label = "ls421de:red:func";
++			gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
 +			default-state = "off";
 +		};
 +		red-hdd0err-led {
@@ -276,9 +281,9 @@ index 0000000..5732f64
 +		gpios = <&gpio0 14 GPIO_ACTIVE_LOW
 +		         &gpio0 13 GPIO_ACTIVE_LOW>;
 +		gpio-fan,speed-map = <0    3
-+		                      1500 2
-+		                      3250 1
-+		                      5000 0>;
++		                      720  2
++		                      1560 1
++		                      2400 0>;
 +		alarm-gpios = <&gpio0 10 GPIO_ACTIVE_HIGH>;
 +	};
 +};
@@ -286,6 +291,10 @@ index 0000000..5732f64
 +&pinctrl {
 +	usb_vbus: usb-vbus {
 +		marvell,pins = "mpp5";
++		marvell,function = "gpo";
++	};
++	funcred_led_pin: funcred-led-pin {
++		marvell,pins = "mpp7";
 +		marvell,function = "gpo";
 +	};
 +	fan_lock: fan-lock {

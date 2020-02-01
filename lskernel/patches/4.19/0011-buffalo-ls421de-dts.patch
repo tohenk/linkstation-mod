@@ -1,9 +1,9 @@
 diff --git a/arch/arm/boot/dts/armada-370-linkstation-ls421de.dts b/arch/arm/boot/dts/armada-370-linkstation-ls421de.dts
 new file mode 100644
-index 000000000000..1727183b67dc
+index 000000000000..08d64160da1e
 --- /dev/null
 +++ b/arch/arm/boot/dts/armada-370-linkstation-ls421de.dts
-@@ -0,0 +1,292 @@
+@@ -0,0 +1,298 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Device Tree file for Buffalo LinkStation LS421DE
@@ -100,13 +100,19 @@ index 000000000000..1727183b67dc
 +				marvell,nand-enable-arbiter;
 +				nand-on-flash-bbt;
 +
-+				partition@0 {
-+					label = "boot";
-+					reg = <0x0 0x02000000>;
-+				};
-+				partition@02100000 {
-+					label = "rootfs";
-+					reg = <0x02100000 0x1df00000>;
++				partitions {
++					compatible = "fixed-partitions";
++					#address-cells = <1>;
++					#size-cells = <1>;
++
++					partition@0 {
++						label = "boot";
++						reg = <0x0 0x02000000>;
++					};
++					partition@02100000 {
++						label = "rootfs";
++						reg = <0x02100000 0x1df00000>;
++					};
 +				};
 +			};
 +		};

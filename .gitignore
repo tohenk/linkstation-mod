@@ -3,3 +3,5 @@ firmware/
 out/
 rootfs/
 tmp/
+*/toolchain/*
+ls-kernel-*.tar.gz

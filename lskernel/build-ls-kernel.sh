@@ -83,11 +83,13 @@ JOB=${LS_KERNEL_JOB:=4}
 
 # Download kernel source
 [ "x$BUILD_DOWNLOAD" = "x1" ] && {
-  [ ! -d "$KERNEL_DIR" ] && {
+  if [ -d "$KERNEL_DIR" ]; then
+    echo "Kernel source has been already downloaded, use --update instead."
+  else
     mkdir -p "$KERNEL_DIR"
     echo "Cloning from ${KERNEL_GIT}"
     git clone --progress $KERNEL_GIT $KERNEL_DIR
-  }
+  fi
   exit 0
 }
 

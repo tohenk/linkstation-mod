@@ -81,14 +81,12 @@ get_toolchain() {
   local TCS=
   [ -d $DIR ] && {
     for TC in `cd $DIR && ls`; do
-      [ -d "$DIR/$TC/bin" ] && {
-        local TC_BINS=`cd $DIR/$TC/bin && ls arm-linux-gnueabihf-* 2>/dev/null`
-        if [ -n "$TC_BINS" ]; then
-          if [ -z "$TCS" ]; then
-            TCS=$TC
-          else
-            TCS="$TCS $TC"
-          fi
+      local TC_BINS=$(get_toolchain_prefix $DIR/$TC)
+      [ -n "$TC_BINS" ] && {
+        if [ -z "$TCS" ]; then
+          TCS=$TC
+        else
+          TCS="$TCS $TC"
         fi
       }
     done
@@ -104,7 +102,15 @@ check_toolchain() {
     for TC in $TCS; do
       [ "x$2" = "x$TC" ] && {
         STATE=0
-        echo "$1/$TC/bin/arm-linux-gnueabihf-"
+        local TC_BINS=$(get_toolchain_prefix $1/$TC)
+        case $TC_BINS in
+        arm-linux-gnueabihf-*)
+          echo "$1/$TC/bin/arm-linux-gnueabihf-"
+          ;;
+        arm-none-linux-gnueabihf-*)
+          echo "$1/$TC/bin/arm-none-linux-gnueabihf-"
+          ;;
+        esac
         break;
       }
     done
@@ -112,12 +118,23 @@ check_toolchain() {
   return $STATE
 }
 
+get_toolchain_prefix() {
+  local DIR=$1
+  [ -d "$DIR/bin" ] && {
+     local TC_BINS=`cd $DIR/bin && ls arm-linux-gnueabihf-* 2>/dev/null`
+     [ -z "$TC_BINS" ] && TC_BINS=`cd $DIR/bin && ls arm-none-linux-gnueabihf-* 2>/dev/null`
+     echo $TC_BINS
+  }
+}
+
 toolchain_not_found() {
   local DIR=$1
   echo "No toolchain found!"
   echo ""
   echo "Toolchain can be downloaded from:"
-  echo "  http://releases.linaro.org/components/toolchain/binaries/"
+  echo "  https://releases.linaro.org/components/toolchain/binaries/"
+  echo "  https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads"
+  echo ""
   echo "After the download is complete, place the extracted content to:"
   echo "  $DIR"
   echo ""

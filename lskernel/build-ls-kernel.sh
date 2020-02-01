@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Parse parameters
+NOARG=""
 if [ $# -eq 0 ]; then
   BUILD_HELP=1
 else
@@ -40,10 +41,18 @@ else
     --update)
       BUILD_UPDATE=1
       ;;
+    *)
+      NOARG=$1
     esac
     shift
   done
 fi
+
+[ -n "$NOARG" ] && {
+  BUILD_HELP=1
+  echo "Unknown option $NOARG."
+  echo ""
+}
 
 [ "x$BUILD_HELP" = "x1" ] && {
   echo "Usage:"
